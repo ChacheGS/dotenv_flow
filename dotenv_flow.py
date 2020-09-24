@@ -1,18 +1,22 @@
 import os
 
 import logging
-from StringIO import StringIO
-from typing import Union, Optional
+import warnings
+
+from typing import Sequence, Text, Optional
 
 from dotenv import load_dotenv, find_dotenv
 
 logger = logging.getLogger(__name__)
 
 
-def dotenv_flow(usecwd: bool = False,
-                override: bool = False,
-                interpolate: bool = True,
-                **kwargs: Optional[str]) -> bool:
+def dotenv_flow(
+    env: Optional[Text] = ...,
+    usecwd: bool = False,
+    override: bool = False,
+    interpolate: bool = True,
+    **kwargs: Optional[str],
+) -> Sequence[Text]:
     """
     Loads different dotenv files based on the value of the PY_ENV variable.
     Values in more specific files override previous values.
@@ -28,25 +32,30 @@ def dotenv_flow(usecwd: bool = False,
     # local .env* files
     .env.local
     .env.*.local
+    :param env: can be set to None explicitly to stop the warning and run with defaults only
+    :param usecwd:
     :param override:
     :param interpolate:
     :return:
     """
-    env = os.environ.get("PY_ENV")
 
-    envs = [".env.defaults", ".env"]
-    if env:
-        envs.append(f".env.{env}")
+    defaults = [".env.defaults", ".env"]
+    if env not in (..., None):
+        defaults.append(f".env.{env}")
+    elif env is not None:
+        warnings.warn("no env selected, using defaults only")
 
-    logger.debug(f"PY_ENV is {env}")
-    for e in reversed(envs):
-        for el in (f"{e}.local", e):
+    loaded = {}
+    logger.debug(f"env is {'default' if env in (..., None) else env}")
+    for dft in reversed(defaults):
+        for el in (f"{dft}.local", dft):
             dotenv_path = find_dotenv(el, usecwd=usecwd)
             if dotenv_path:
                 logger.info(f"loading {dotenv_path}")
-                load_dotenv(dotenv_path, override=override, interpolate=interpolate,
-                            **kwargs)
-    return True
+                loaded[dotenv_path] = load_dotenv(
+                    dotenv_path, override=override, interpolate=interpolate, **kwargs
+                )
+    return [e for e in loaded if loaded[e]]
 
 
 if __name__ == "__main__":
@@ -55,4 +64,4 @@ if __name__ == "__main__":
     dotenv_flow("test_envs")
     for e in ["", "test", "pro", "dev"]:
         os.environ["PY_ENV"] = e
-        dotenv_flow(path="test_envs")
+        print(dotenv_flow(path="test_envs"))
