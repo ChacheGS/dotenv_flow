@@ -63,5 +63,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     dotenv_flow("test_envs")
     for e in ["", "test", "pro", "dev"]:
-        os.environ["PY_ENV"] = e
-        print(dotenv_flow(path="test_envs"))
+        print(dotenv_flow(e))
