@@ -33,10 +33,10 @@ def dotenv_flow(
     .env.local
     .env.*.local
     :param env: can be set to None explicitly to stop the warning and run with defaults only
-    :param usecwd:
-    :param override:
-    :param interpolate:
-    :return:
+    :param usecwd: passed to python-dotenv
+    :param override: passed to python-dotenv
+    :param interpolate: passed to python-dotenv
+    :return: a list with the paths of the files loaded
     """
 
     defaults = [".env.defaults", ".env"]
