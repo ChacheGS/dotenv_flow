@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dotenv-flow"
-version = "0.2.2"
+version = "0.2.3"
 description = "Like the dotenv-flow NodeJS library, for Python"
 authors = ["Carlos Gonzalez <gonsa.carlos@gmail.com>"]
 readme = "README.md"
