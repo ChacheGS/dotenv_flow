@@ -42,6 +42,8 @@ def dotenv_flow(
     if base_path is None:
         use_cwd = True
 
+    env = env not in (..., None) or os.environ.get("PY_ENV", "")
+
     defaults = [".env.defaults", ".env"]
     if env not in (..., None):
         defaults.append(f".env.{env}")
@@ -60,11 +62,3 @@ def dotenv_flow(
                     dotenv_path, override=override, interpolate=interpolate, **kwargs
                 )
     return [e for e in loaded if loaded[e]]
-
-
-if __name__ == "__main__":
-
-    logging.basicConfig(level=logging.DEBUG)
-    dotenv_flow("test_envs")
-    for e in ["", "test", "pro", "dev"]:
-        print(dotenv_flow(e))
