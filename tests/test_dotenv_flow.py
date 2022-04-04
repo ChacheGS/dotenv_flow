@@ -2,7 +2,6 @@ import os
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from typing import List, Text
 from unittest import TestCase
 
 from parameterized import parameterized
@@ -49,7 +48,7 @@ class Test(TestCase):
             os.environ.pop("VAR")
 
     @contextmanager
-    def environment(self, env: Text, private: bool):
+    def environment(self, env: str, private: bool):
         if env:
             os.environ["PY_ENV"] = env
 
