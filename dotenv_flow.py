@@ -42,7 +42,8 @@ def dotenv_flow(
     if base_path is None:
         use_cwd = True
 
-    env = env not in (..., None) or os.environ.get("PY_ENV", "")
+    if env in (..., None):
+        env = os.getenv("PY_ENV", "")
 
     defaults = [".env.defaults", ".env"]
     if env not in (..., None):
