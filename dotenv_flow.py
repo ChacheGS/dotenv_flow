@@ -1,10 +1,9 @@
 import os
 
-import logging
 import warnings
 from pathlib import Path
 
-from typing import Sequence, Optional
+from typing import Any, Mapping, Sequence, Optional
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -14,7 +13,7 @@ def dotenv_flow(
     base_path: Optional[os.PathLike] = None,
     override: bool = False,
     interpolate: bool = True,
-    **kwargs: Optional[str],
+    **kwargs: Mapping[str, Any],
 ) -> Sequence[str]:
     """
     Loads different dotenv files based on the value of the PY_ENV variable, if set.
