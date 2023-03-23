@@ -1,94 +1,59 @@
 import os
-import unittest
-from contextlib import contextmanager
-from pathlib import Path
+from typing import Iterable, Optional
 from unittest import TestCase
 
 from parameterized import parameterized
 
 from dotenv_flow import dotenv_flow
+from tests import EnvFilesManager, EnvironManager, expected_environ
 
-BASE_DIR = Path(__file__).parent.parent
 
-
-def expectations(args):
-    # assert len(args) == 4
-    exp = []
-    for a in args:
+def expectations(envs: Iterable[Optional[str]]):
+    """
+    Build the arguments for the test functions.
+    """
+    args_tuples = []
+    for env in envs:
+        # make the public and private versions of the expectations
+        # since all files are present for all tests. expected env will always be the private one
         for private in (True, False):
-            args = (
-                f"{a if a else 'empty'}_{'private' if private else 'public'}",
-                a,
-                private,
-                f".env{f'.{a}' if a else ''}{'.local' if private else ''}",
-            )
-            exp.append(args)
-    return exp
+            expected = expected_environ(env, True)
+
+            mode = "private" if private else "public"
+
+            args = (f"{env if env else 'empty'}_{mode}", env, expected)
+            args_tuples.append(args)
+    return args_tuples
 
 
 class Test(TestCase):
-    __ENVS_NAMES = {
-        "edge": [..., None],
-        "regular": ["", "dev", "test", "pro"],
-    }
+    __ENVS_NAMES = ["dev", "test", "pro"]
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._envfiles = set()
+        cls.manager = EnvFilesManager()
 
-    @classmethod
-    def tearDownClass(cls) -> None:
-        for env in cls._envfiles:
-            file = BASE_DIR / env
-            if file.is_file() and file.stem.startswith(".env"):
-                file.unlink()
+    def tearDown(self) -> None:
+        """
+        Remove the files that we created earlier.
+        """
+        self.manager.clear()
 
-    def setUp(self) -> None:
-        if os.getenv("VAR"):
-            os.environ.pop("VAR")
+    @parameterized.expand(expectations(__ENVS_NAMES))
+    def test_dotenv_flow(self, name, env, expected):
+        with EnvironManager(self.manager, env):
+            dotenv_flow(env, base_path=self.manager.base_dir)
+            self.assertEqual(expected, os.environ)
 
-    @contextmanager
-    def environment(self, env: str, private: bool):
-        if env:
-            os.environ["PY_ENV"] = env
-
-        name = f".env.{env}" if env else ".env"
-        names = [name]
-
-        if private:
-            names.append(
-                f"{name}.local"
-            )
-
-        for env in names:
-            with (BASE_DIR / env).open("w") as f:
-                print(f"VAR={env}", file=f)
-
-        self._envfiles.update(names)
-
-        yield
-
-    @parameterized.expand(
-        expectations(__ENVS_NAMES["regular"])
-    )
-    def test_dotenv_flow(self, name, env, private, expected):
-        with self.environment(env, private):
-            dotenv_flow(env)
-            self.assertEqual(expected, os.getenv("VAR"))
-
-    @parameterized.expand(
-        expectations(__ENVS_NAMES["regular"])
-    )
-    def test_when_name_unset(self, name, env, private, expected):
-        with self.environment(env, private):
+    @parameterized.expand(expectations([...]))
+    def test_when_name_unset(self, name, env, expected):
+        with EnvironManager(self.manager, env):
             with self.assertWarns(Warning):
-                dotenv_flow()
-            self.assertEqual(expected, os.getenv("VAR"))
+                dotenv_flow(base_path=self.manager.base_dir)
+            self.assertEqual(expected, os.environ)
 
-    @parameterized.expand(
-        expectations(__ENVS_NAMES["regular"])
-    )
-    def test_when_name_is_none(self, name, env, private, expected):
-        with self.environment(env, private):
-            dotenv_flow(None)
-            self.assertEqual(expected, os.getenv("VAR"))
+    @parameterized.expand(expectations([None]))
+    def test_when_name_is_none(self, name, env, expected):
+        with EnvironManager(self.manager, env):
+            dotenv_flow(None, base_path=self.manager.base_dir)
+            self.assertEqual(expected, os.environ)
