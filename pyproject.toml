@@ -1,19 +1,23 @@
 [tool.poetry]
 name = "dotenv-flow"
-version = "0.3.3"
+version = "0.4.0"
 description = "Like the dotenv-flow NodeJS library, for Python"
 authors = ["Carlos Gonzalez <gonsa.carlos@gmail.com>"]
-maintainers = ["Carlos Gonzalez <gonsa.carlos@gmail.com>"]
 repository = "https://github.com/ChacheGS/dotenv_flow"
 readme = "README.md"
 license = "WTFPL"
+keywords = ["environment variables", "deployments", "settings", "env", "dotenv", "configurations", "python"]
+
+packages = [
+    {include = "dotenv_flow"}
+]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-python-dotenv = "^0.21.0"
+python = "^3.8"
+python-dotenv = "^1.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^22"
+black = "*"
 parameterized = "^0.8.1"
 pytest = "^7.2.1"
 
